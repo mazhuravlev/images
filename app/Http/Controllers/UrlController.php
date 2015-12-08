@@ -20,6 +20,12 @@ use Psr\Http\Message\ResponseInterface;
 class UrlController extends Controller
 {
 
+    private static function timestamp($startTime)
+    {
+        list($sec, $usec) = explode('.', $startTime);
+        return date('H:i:s:', $sec) . substr($usec, 0, 2);
+    }
+
     private static function makePromisesFromQueue(array $imgQueue, Client $client, array &$imgSizes, array &$errors)
     {
         /** @var Promise[] $promises */
@@ -86,12 +92,14 @@ class UrlController extends Controller
         }
     }
 
-    private static function errResponse($reason)
+    private static function errResponse($reason, $startTime)
     {
         return response()->json(
             [
                 'status' => 'err',
-                'msg' => $reason
+                'msg' => $reason,
+                'timestamp' => self::timestamp($startTime),
+                'time' => microtime(true) - $startTime
             ]
         );
     }
@@ -100,7 +108,7 @@ class UrlController extends Controller
     {
         $startTime = microtime(true);
         if (!$url = Input::get('url')) {
-            return self::errResponse('no url in request');
+            return self::errResponse('no url in request', $startTime);
         }
         $cacheKey = env('CACHE_PREFIX') . $url;
         if($cacheResult = self::getCache($cacheKey, $startTime)) {
@@ -115,12 +123,12 @@ class UrlController extends Controller
         try {
             $page = $client->get('')->getBody()->getContents();
         } catch (GuzzleException $e) {
-            return self::errResponse('unable to get page');
+            return self::errResponse('unable to get page', $startTime);
         }
         $document = new DOMDocument();
         libxml_use_internal_errors(true);
         if (!$document->loadHTML($page)) {
-            return self::errResponse('invalid html from ' . $url);
+            return self::errResponse('invalid html from ' . $url, $startTime);
         };
         $errors = [];
         $xpath = new DOMXPath($document);
@@ -154,8 +162,7 @@ class UrlController extends Controller
             $response['errors'] = array_unique(array_values($errors));
         }
         $response['status'] = 'ok';
-        list($sec, $usec) = explode('.', $startTime);
-        $response['timestamp'] = date('H:i:s:', $sec) . substr($usec, 0, 2);
+        $response['timestamp'] = self::timestamp($startTime);
         $response['time'] = microtime(true) - $startTime;
         return response()->json($response);
     }
