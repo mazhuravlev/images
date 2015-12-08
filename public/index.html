@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" ng-app="imagesApp">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="css/app.css">
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
+</head>
+<body>
+<div ng-controller="NavigationCtrl">
+    <a class="nav-button" href="#/images" ng-class="{ active: isCurrentPath('/images') }">
+        <button class="btn">Запросы URL</button>
+    </a>
+    <a class="nav-button" href="#/cache" ng-class="{ active: isCurrentPath('/cache') }">
+        <button class="btn">Просмотр кэша</button>
+    </a>
+</div>
+<div ng-view></div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+.nav-button {
+    width: 50%;
+    margin: 0;
+    display: inline-block;
+    font-size: 0;
+    margin-right: -4px;
+}
+.nav-button.active .btn{
+    background-color: aquamarine;
+}
+.nav-button .btn {
+    width: 100%;
+    border-radius: 0;
+}
