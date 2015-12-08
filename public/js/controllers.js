@@ -2,6 +2,13 @@ var appControllers = angular.module('appControllers', []);
 
 appControllers.controller('CacheListCtrl', function($scope, $http) {
     $scope.cache = [];
+    $scope.deleteCacheRecord = function(url) {
+        $http.delete('/cache/' + btoa(url)).success(function(data){
+            $scope.cache = $scope.cache.filter(function(record) {
+                return url !== record.url;
+            });
+        })
+    }
     $http.get('/cache').success(function(data) {
         if(data instanceof Array) {
             $scope.cache = data;
@@ -10,11 +17,20 @@ appControllers.controller('CacheListCtrl', function($scope, $http) {
 });
 
 appControllers.controller('UrlListCtrl', function ($scope, $http) {
-    $scope.urlsTextInput = 'http://rp5.ru\nhttp://ya.ru';
+    $scope.urlsTextInput = '';
     $scope.results = [];
     $scope.processedUrls = [];
-    $scope.processUrls = function (urlText) {
-        var urls = urlText.split('\n')
+    $scope.processUrls = function () {
+        $scope.urlsTextInput = $scope.urlsTextInput
+            .split('\n')
+            .map(function(line) {
+                if(!/^https?:\/\//.test(line)) {
+                    return 'http://' + line;
+                }
+                return line;
+            })
+            .join('\n');
+        var urls = $scope.urlsTextInput.split('\n')
             .map(function (url) {
                 return url.trim();
             })
@@ -22,28 +38,15 @@ appControllers.controller('UrlListCtrl', function ($scope, $http) {
                 return url.length > 0 && -1 === $scope.processedUrls.indexOf(url);
             });
         urls.forEach(function (url) {
-                $scope.processedUrls.push(url);
-                $http.post('/count_images', {url: url}).success(function(data) {
+                $http.post('/process', {url: url}).success(function(data) {
                     if('status' in data) {
                         if('ok' === data.status) {
-                            $scope.results.push({
-                                url: data.url,
-                                status: 'ok',
-                                imageCount: data.imageCount,
-                                imageSize: data.imageSize,
-                                class: 'errors' in data ? 'warning' : '',
-                                title: 'errors' in data ? 'ошибки :' + data.errors.join(', ') : ''
-                            });
+                            $scope.processedUrls.push(url);
+                            data.class = 'errors' in data ? 'warning' : '';
                         } else {
-                            $scope.results.push({
-                                url: url,
-                                status: 'err',
-                                imageCount: '',
-                                imageSize: '',
-                                class: 'danger',
-                                title: 'произошла ошибка'
-                            });
+                            data.class = 'danger';
                         }
+                        $scope.results.push(data);
                     } else {
                         // server error
                     }

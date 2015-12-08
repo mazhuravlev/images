@@ -9,8 +9,8 @@ imagesApp.controller('NavigationCtrl', ['$scope', '$location', function ($scope,
 imagesApp.config(['$routeProvider',
     function ($routeProvider) {
         $routeProvider
-            .when('/images', {
-                templateUrl: 'views/images.html',
+            .when('/process', {
+                templateUrl: 'views/process.html',
                 controller: 'UrlListCtrl'
             })
             .when('/cache', {
@@ -18,6 +18,6 @@ imagesApp.config(['$routeProvider',
                 controller: 'CacheListCtrl'
             })
             .otherwise({
-                redirectTo: '/images'
+                redirectTo: '/process'
             });
     }]);

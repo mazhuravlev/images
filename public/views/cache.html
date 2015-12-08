@@ -5,7 +5,7 @@
     <th width="10%">размер</th>
     </thead>
     <tbody>
-    <tr ng-repeat="record in cache">
+    <tr class="clickable" ng-repeat="record in cache" ng-click="deleteCacheRecord(record.url)">
         <td>{{ record.url }}</td>
         <td>{{ record.imageCount }}</td>
         <td>{{ record.imageSize }}</td>
