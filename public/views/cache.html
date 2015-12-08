@@ -1,0 +1,14 @@
+<table class="table table-striped table-condensed table-bordered table-hover">
+    <thead>
+    <th width="70%">url</th>
+    <th width="10%">количество</th>
+    <th width="10%">размер</th>
+    </thead>
+    <tbody>
+    <tr ng-repeat="record in cache">
+        <td>{{ record.url }}</td>
+        <td>{{ record.imageCount }}</td>
+        <td>{{ record.imageSize }}</td>
+    </tr>
+    </tbody>
+</table>

@@ -1,7 +1,12 @@
 var appControllers = angular.module('appControllers', []);
 
 appControllers.controller('CacheListCtrl', function($scope, $http) {
-
+    $scope.cache = [];
+    $http.get('/cache').success(function(data) {
+        if(data instanceof Array) {
+            $scope.cache = data;
+        }
+    });
 });
 
 appControllers.controller('UrlListCtrl', function ($scope, $http) {
