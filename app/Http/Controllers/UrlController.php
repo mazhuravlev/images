@@ -67,13 +67,23 @@ class UrlController extends Controller
                     array_push($errors, 'unable to get css: ' . $cssHref);
                     continue;
                 }
-                if(preg_match_all('/background(-image)?\s*:\s*url\s*\((\'|")?(.+?)(\'|")?\)/', $css, $matches)) {
-                    $result = array_merge($result, array_unique($matches[3]));
+                if(preg_match_all('/background(-image)?\s*:\s*url\s*\(([^)]+)\)/', $css, $matches)) {
+                    foreach($matches[2] as $imgSrc) {
+                        array_push($result, self::cleanUrl($imgSrc));
+                    }
                 }
             }
         }
         return $result;
     }
+
+    private static function cleanUrl($imgSrc)
+    {
+        $imgSrc = preg_replace('/^[\'"\\\\\s]+/', '', $imgSrc);
+        $imgSrc = preg_replace('/[\'"\\\\\s]+$/', '', $imgSrc);
+        return $imgSrc;
+    }
+
 
     private static function getCache($cacheKey, $startTime)
     {
@@ -102,6 +112,20 @@ class UrlController extends Controller
                 'time' => microtime(true) - $startTime
             ]
         );
+    }
+
+    private static function separateInlineImages(array $imageList)
+    {
+        $urlSrc = [];
+        $inlineSrc = [];
+        foreach($imageList as $imgSrc) {
+            if(preg_match('/^data:image/', $imgSrc)) {
+                array_push($inlineSrc, $imgSrc);
+            } else {
+                array_push($urlSrc, $imgSrc);
+            }
+        }
+        return [$urlSrc, $inlineSrc];
     }
 
     public function process()
@@ -139,12 +163,21 @@ class UrlController extends Controller
         );
         foreach ($xpath->query('//img') as $imgNode) {
             if ($src = $imgNode->getAttribute('src')) {
-                array_push($imagesQueue, $src);
+                array_push(
+                    $imagesQueue,
+                    self::cleanUrl($src)
+                );
             }
         }
-        $imgSizes = [];
+        list($urlSrcImages, $inlineSrcImages) = self::separateInlineImages($imagesQueue);
+        $imgSizes = array_map(
+            function($imgSrc) {
+                return strlen($imgSrc);
+            },
+            $inlineSrcImages
+        );
         $promises = self::makePromisesFromQueue(
-            array_unique($imagesQueue),
+            array_unique($urlSrcImages),
             $client,
             $imgSizes,
             $errors
